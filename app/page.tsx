@@ -14,8 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Plus, Users, Calendar, User, CalendarCheck } from "lucide-react";
-
+import { Plus, Users, Calendar, User, CalendarCheck, Copy, Check } from "lucide-react";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type TimeSlot = string; // "day-hour", e.g. "0-9" = Monday 9am
@@ -159,6 +158,7 @@ export default function MeetFlow() {
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
   const [viewId, setViewId] = useState("xiao-liang");
+  const [copied, setCopied] = useState(false);
 
   const me = members.find((m) => m.id === "me")!;
   const others = members.filter((m) => m.id !== "me");
@@ -199,6 +199,19 @@ export default function MeetFlow() {
     setMembers((prev) => [...prev, newMember]);
     setNewName("");
     setOpen(false);
+  }
+
+  function copyCommonSlots() {
+    const text = commonSlots
+      .map((s) => {
+        const [d, h] = s.split("-").map(Number);
+        return `${DAYS[d]} ${h}:00–${h + 1}:00`;
+      })
+      .join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   return (
@@ -386,11 +399,33 @@ export default function MeetFlow() {
 
           {/* ── Tab 4: Common Availability ── */}
           <TabsContent value="common">
-            <div className="mb-5">
-              <h2 className="text-base font-semibold">共同空閒時間</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                所有 {members.length} 位成員都空閒的時段
-              </p>
+            <div className="mb-5 flex items-start justify-between">
+              <div>
+                <h2 className="text-base font-semibold">共同空閒時間</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  所有 {members.length} 位成員都空閒的時段
+                </p>
+              </div>
+              {commonSlots.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyCommonSlots}
+                  className="gap-1.5 shrink-0"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      已複製！
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      複製時段
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
 
             <Card>
